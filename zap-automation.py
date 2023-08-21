@@ -2,6 +2,13 @@ import os
 import requests
 import argparse
 import time
+import json 
+
+""" for now a zaproxy process for onetime execution and dies  
+    phase 2: will run multiple automation workflow once all done process dies better integration with multiple pipeline in the same host
+"""
+
+
 def main():
     parser = argparse.ArgumentParser(description="OWASP ZAP Automation Script")
     subparsers = parser.add_subparsers(dest="command", title="Commands")
@@ -14,9 +21,11 @@ def main():
     parser_update.add_argument("-attack", choices=["on", "off"], help="Enable or disable attacks")
     parser_run = subparsers.add_parser("run", help="Run ZAP automation")
     parser_run.add_argument("-auto", help="Specify the file path for automation")
-    parser_run = subparsers.add_parser("check", help="Check ZAP is running")
+    parser_run = subparsers.add_parser("checkzap", help="Check ZAP is running")
     parser_run = subparsers.add_parser("init", help="load all the community script and enable them")
     parser_run = subparsers.add_parser("shut", help="shutdown zap")
+    parser_run = subparsers.add_parser("checkauto", help="check automation running status {deprecated}")
+    parser_start.add_argument("-id", help="automation id")
     args = parser.parse_args()
 
     api_key = os.environ.get("ZAP_API_KEY")
@@ -27,7 +36,7 @@ def main():
         if args.attack == "on":
             attack_startup(url,api_key,"true")
         else:
-            attack_startup(url,api_key,"false")
+            attack_startup(url,api_key,"false") 
         if args.mode == "attack":
             attack_mode(url,api_key,"attack")
         else:
@@ -46,7 +55,7 @@ def main():
             attack_startup(url,api_key,"true")
         else:
             attack_startup(url,api_key,"false")
-    elif args.command == "check":
+    elif args.command == "checkzap":
         check_zap_running(url)
     elif args.command == "run":
         print(args.auto)
@@ -55,6 +64,8 @@ def main():
         init_zap_script(url,api_key)
     elif args.command == "shut":
         stop_zap(url,api_key)
+    elif args.command == "checkauto":
+        check_auto(url,api_key,args.id)
     else:
         parser.print_help()
 
@@ -167,6 +178,8 @@ def automation(url,api_key,path):
 
         if response.status_code == "200":
             print("automation build started")
+            plan_id = response.json().get("planId")
+            check_auto(url,api_key,plan_id)
         else:
             print("Error",response.json())
         print(response.content)
@@ -175,13 +188,29 @@ def automation(url,api_key,path):
 
 
 
-def check_auto(url,apikey,id):
-    headers = {
-        "Accept" : "application/json"
-    }
-    response = requests.get(f"{url}/JSON/automation/view/planProgress/?apikey={api_key}&planId={id}",headers=headers)
-    return response.json()
 
+
+
+
+def check_auto(url,api_key,id):
+    try:
+        while True:
+            headers = {
+                "Accept" : "application/json"
+            }
+            response = requests.get(f"{url}/JSON/automation/view/planProgress/?apikey={api_key}&planId={id}",headers=headers)
+            progress = response.json()
+            if "finished" in progress and progress["finished"]:
+                print("Automation finished")
+                break
+        print("process is still running this is for debuging")
+        time.sleep(600)
+    except Exception as e:
+        print("failed to check automation progress:", e)
 
 if __name__ == "__main__":
     main()
+
+
+
+    {"warn":{"itemsClass":null,"name":"warn","items":[]},"planId":1,"started":{"date":21,"hours":12,"seconds":6,"month":7,"timezoneOffset":240,"year":123,"minutes":42,"time":1692636126640,"day":1},"finished":{"date":21,"hours":12,"seconds":6,"month":7,"timezoneOffset":240,"year":123,"minutes":42,"time":1692636126733,"day":1},"error":{"itemsClass":"org.zaproxy.zap.extension.api.ApiResponseElement","name":"error","items":[{"name":"error","value":"No URLs defined in any of the contexts"}]},"info":{"itemsClass":null,"name":"info","items":[]}}
