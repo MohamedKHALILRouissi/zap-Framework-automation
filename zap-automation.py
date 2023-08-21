@@ -136,7 +136,7 @@ def attack_mode(url,api_key,mode):
 
 def start_zap(url, api_key):
     try:
-        os.system(f"zaproxy -config api.key={api_key} -port 11111 &")
+        os.system(f"zaproxy -daemon -config api.key={api_key} -port 11111 &")
         time.sleep(80)
         print("ZAP started in the background.")
     except Exception as e:
