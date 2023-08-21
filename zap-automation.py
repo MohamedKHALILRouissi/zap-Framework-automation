@@ -180,6 +180,8 @@ def automation(url,api_key,path):
             print("automation build started")
             plan_id = response.json().get("planId")
             check_auto(url,api_key,plan_id)
+            print("stopping zap")
+            stop_zap(url,api_key)
         else:
             print("Error",response.json())
         print(response.content)
@@ -213,4 +215,3 @@ if __name__ == "__main__":
 
 
 
-    {"warn":{"itemsClass":null,"name":"warn","items":[]},"planId":1,"started":{"date":21,"hours":12,"seconds":6,"month":7,"timezoneOffset":240,"year":123,"minutes":42,"time":1692636126640,"day":1},"finished":{"date":21,"hours":12,"seconds":6,"month":7,"timezoneOffset":240,"year":123,"minutes":42,"time":1692636126733,"day":1},"error":{"itemsClass":"org.zaproxy.zap.extension.api.ApiResponseElement","name":"error","items":[{"name":"error","value":"No URLs defined in any of the contexts"}]},"info":{"itemsClass":null,"name":"info","items":[]}}
