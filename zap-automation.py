@@ -136,8 +136,8 @@ def attack_mode(url,api_key,mode):
 
 def start_zap(url, api_key):
     try:
-        os.system(f"zaproxy -daemon -config api.key={api_key} -port 11111 &")
-        time.sleep(40) # change if caused any error 
+        os.system(f"zaproxy -config api.key={api_key} -port 11111 &")
+        time.sleep(80)
         print("ZAP started in the background.")
     except Exception as e:
         print("Failed to start ZAP:", e)
@@ -176,14 +176,11 @@ def automation(url,api_key,path):
         }
         response = requests.post(f"{url}/JSON/automation/action/runPlan/",headers=headers,data=data)
 
-        if response.status_code == "200":
-            print("automation build started")
-            plan_id = response.json().get("planId")
-            check_auto(url,api_key,plan_id)
-            print("stopping zap")
-            stop_zap(url,api_key)
-        else:
-            print("Error",response.json())
+        print("automation build started")
+        plan_id = response.json().get("planId")
+        check_auto(url,api_key,plan_id)
+        print("stopping zap")
+        stop_zap(url,api_key)
         print(response.content)
     except Exception as e:
         print("Failed to start ZAP:", e)
